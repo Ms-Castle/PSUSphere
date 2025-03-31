@@ -15,7 +15,7 @@ class Command(BaseCommand):
 
         for _ in range(count):
             words = [fake.word() for _ in range(2)]
-            organization_name = '_'.join(words)
+            organization_name = ' '.join(words)
             Organization.objects.create(
                 name=organization_name.title(),
                 college=College.objects.order_by('?').first(),
