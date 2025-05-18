@@ -23,10 +23,11 @@ from studentorg.views import CollegeList, CollegeCreateView, CollegeUpdateView, 
 from studentorg.views import ProgramList, ProgramCreateView, ProgramUpdateView, ProgramDeleteView
 from studentorg import views
 from django.contrib.auth import views as auth_views
+from studentorg.views import ChartView, PieCountbyCollege, LineCount, MultilineOrgTop3, multipleBarByOrgMembers
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', views.HomePageView.as_view(), name='home'),
+    path('', views.ChartView.as_view(), name='home'),
 
     # Organization URLs
     path('organization_list', OrganizationList.as_view(), name='organization-list'),
@@ -60,4 +61,9 @@ urlpatterns = [
     path('program_list/add', ProgramCreateView.as_view(), name='program-add'),
     path('program_list/<pk>', ProgramUpdateView.as_view(), name='program-update'),
     path('program_list/<pk>/delete', ProgramDeleteView.as_view(), name='program-delete'),
+
+    path('MultilineOrgTop3/', views.MultilineOrgTop3, name='multiline-org-top3'),
+    path('LineCount/', views.LineCount, name='line-count'),
+    path('multipleBarByOrgMembers/', views.multipleBarByOrgMembers, name='multiple-bar-by-org-members'),
+    path('PieCountbyCollege/', views.PieCountbyCollege, name='pie-count-by-college'),
 ]

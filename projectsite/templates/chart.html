@@ -1,0 +1,323 @@
+{% extends 'base.html' %} 
+{% load static %} 
+{% block content %}
+
+<div class="page-inner">
+  <h4 class="page-title">Chart.js</h4>
+  <div class="page-category"></div>
+  <div class="row">
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Line Chart</div>
+        </div>
+        <div class="card-body">
+          <div class="chart-container" style="height:350px;">
+            <canvas id="lineChart" height="350"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Pie Chart</div>
+        </div>
+        <div class="card-body">
+          <div class="chart-container">
+            <canvas id="pieChart" height="350"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Multiple Line Chart</div>
+        </div>
+        <div class="card-body">
+          <div class="chart-container">
+            <canvas id="multipleLineChart" height="350"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Multiple Bar Chart</div>
+        </div>
+        <div class="card-body">
+          <div class="chart-container">
+            <canvas id="multipleBarChart" height="350"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block chart %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  function loadChartData() {
+      // Pie Chart for students per college
+      fetch("/PieCountbyCollege/")
+      .then((response) => response.json())
+      .then((data) => {
+          var collegeLabels = data.labels;
+          var collegeCounts = data.data;
+          var pieChartElem = document.getElementById("pieChart");
+          if (!pieChartElem) return;
+          var pieChart = pieChartElem.getContext("2d");
+
+          new Chart(pieChart, {
+              type: "pie",
+              data: {
+                  datasets: [{
+                      data: collegeCounts,
+                      backgroundColor: ["#1d7af3", "#f35454", "#fdaf4b", "#59d05d", "#716aca", "#177dff", "#fdaf4b", "#f3545d"],
+                      borderWidth: 0,
+                  }],
+                  labels: collegeLabels,
+              },
+              options: {
+                  responsive: true,
+                  maintainAspectRatio: false,
+                  plugins: {
+                      legend: {
+                          position: "bottom",
+                          labels: {
+                              color: "rgb(154, 154, 154)",
+                              font: {
+                                  size: 11
+                              },
+                              usePointStyle: true,
+                              padding: 20,
+                          },
+                      },
+                      tooltip: {
+                          enabled: true
+                      }
+                  },
+                  layout: {
+                      padding: {
+                          left: 20,
+                          right: 20,
+                          top: 20,
+                          bottom: 20,
+                      },
+                  },
+              },
+          });
+      })
+      .catch((error) => console.error("Error:", error));
+
+      // Multi-Line Chart for org count by college per month
+      fetch("/LineCount/")
+      .then((response) => response.json())
+      .then((result) => {
+        var colleges = Object.keys(result);
+        var months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        var colors = [
+          "#1d7af3", "#59d05d", "#f3545d", "#fdaf4b", "#716aca", "#177dff", "#fdaf4b", "#f3545d", "#4bc0c0", "#9966ff"
+        ];
+        var datasets = [];
+
+        colleges.forEach(function(college, idx) {
+          var data = months.map(month => result[college][month]);
+          datasets.push({
+            label: college,
+            borderColor: colors[idx % colors.length],
+            pointBorderColor: "#FFF",
+            pointBackgroundColor: colors[idx % colors.length],
+            pointBorderWidth: 2,
+            pointHoverRadius: 4,
+            pointHoverBorderWidth: 1,
+            pointRadius: 4,
+            backgroundColor: "transparent",
+            fill: false,
+            borderWidth: 2,
+            data: data,
+          });
+        });
+
+        var lineChartElem = document.getElementById("lineChart");
+        if (!lineChartElem) return;
+        var lineChart = lineChartElem.getContext("2d");
+
+        new Chart(lineChart, {
+          type: "line",
+          data: {
+            labels: months,
+            datasets: datasets,
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                position: "top",
+                labels: {
+                  padding: 10,
+                  color: "#1d7af3",
+                },
+              },
+              tooltip: {
+                enabled: true,
+                bodySpacing: 4,
+                mode: "nearest",
+                intersect: false,
+                position: "nearest",
+                xPadding: 10,
+                yPadding: 10,
+                caretPadding: 10,
+              }
+            },
+            layout: {
+              padding: { left: 15, right: 15, top: 15, bottom: 15 },
+            },
+          },
+        });
+      })
+      .catch((error) => console.error("Error:", error));
+
+      // MultiLine Chart for top 3 orgs by members per month
+      fetch("/MultilineOrgTop3/")
+      .then((response) => response.json())
+      .then((result) => {
+        var orgs = Object.keys(result);
+        var months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        var datasets = [];
+        var colors = ["#1d7af3", "#59d05d", "#f3545d"];
+
+        orgs.forEach(function(org, idx) {
+          var orgData = [];
+          months.forEach(function(month) {
+            orgData.push(result[org][month]);
+          });
+          datasets.push({
+            label: org,
+            borderColor: colors[idx % colors.length],
+            pointBorderColor: "#FFF",
+            pointBackgroundColor: colors[idx % colors.length],
+            pointBorderWidth: 2,
+            pointHoverRadius: 4,
+            pointHoverBorderWidth: 1,
+            pointRadius: 4,
+            backgroundColor: "transparent",
+            fill: true,
+            borderWidth: 2,
+            data: orgData,
+          });
+        });
+
+        var multipleLineChartElem = document.getElementById("multipleLineChart");
+        if (!multipleLineChartElem) return;
+        var multipleLineChart = multipleLineChartElem.getContext("2d");
+
+        new Chart(multipleLineChart, {
+          type: "line",
+          data: {
+            labels: months,
+            datasets: datasets,
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                position: "top",
+              },
+              tooltip: {
+                enabled: true,
+                bodySpacing: 4,
+                mode: "nearest",
+                intersect: false,
+                position: "nearest",
+                xPadding: 10,
+                yPadding: 10,
+                caretPadding: 10,
+              }
+            },
+            layout: {
+              padding: { left: 15, right: 15, top: 15, bottom: 15 },
+            },
+          },
+        });
+      })
+      .catch((error) => console.error("Error:", error));
+
+      // Multiple Bar Chart for organization member numbers per month
+      fetch("/multipleBarByOrgMembers/")
+      .then((response) => response.json())
+      .then((result) => {
+        var orgs = Object.keys(result);
+        var months = Object.keys(orgs.length > 0 ? result[orgs[0]] : {});
+        var colors = [
+          "#1d7af3", "#59d05d", "#f3545d", "#fdaf4b", "#716aca", "#177dff", "#fdaf4b", "#f3545d", "#4bc0c0", "#9966ff"
+        ];
+        var datasets = [];
+
+        orgs.forEach(function(org, idx) {
+          var data = months.map(month => result[org][month]);
+          datasets.push({
+            label: org,
+            backgroundColor: colors[idx % colors.length],
+            borderColor: colors[idx % colors.length],
+            borderWidth: 1,
+            data: data,
+          });
+        });
+
+        var multipleBarChartElem = document.getElementById("multipleBarChart");
+        if (!multipleBarChartElem) return;
+        var multipleBarChart = multipleBarChartElem.getContext("2d");
+
+        new Chart(multipleBarChart, {
+          type: "bar",
+          data: {
+            labels: months,
+            datasets: datasets,
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                position: "top",
+              },
+              tooltip: {
+                enabled: true,
+                mode: "index",
+                intersect: false,
+              }
+            },
+            layout: {
+              padding: { left: 15, right: 15, top: 15, bottom: 15 },
+            },
+            scales: {
+              x: {
+                stacked: true,
+                title: {
+                  display: true,
+                  text: "Month"
+                }
+              },
+              y: {
+                stacked: true,
+                title: {
+                  display: true,
+                  text: "Members Joined"
+                },
+                beginAtZero: true
+              }
+            }
+          },
+        });
+      })
+      .catch((error) => console.error("Error:", error));
+  }
+  window.addEventListener('DOMContentLoaded', loadChartData);
+</script>
+{% endblock %}
